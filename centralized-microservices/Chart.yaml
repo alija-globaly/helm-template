@@ -1,0 +1,7 @@
+apiVersion: v2
+name: centralized-microservices
+description: Centralized Helm Chart for all Microservices
+type: application
+version: 1.0.0
+appVersion: "1.0"
+

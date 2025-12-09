@@ -1,0 +1,189 @@
+# Microservice identifier
+microserviceName: sms-campaign
+
+# Namespace
+namespace: agentcis-sms-campaign
+
+# Image pull secrets
+imagePullSecrets:
+  - ecr-registry-secret
+
+# Node affinity (shared by frontend and backend)
+nodeAffinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      preference:
+        matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - other-server
+    - weight: 50
+      preference:
+        matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - secondary-node1
+
+# PVC names
+pvc:
+  config:
+    name: nfs-sms-campaign-config-pvc
+  log:
+    name: nfs-sms-campaign-log-pvc
+
+# PV configuration
+pv:
+  config:
+    name: nfs-pv-sms-campaign-config
+    capacity: 5Gi
+    nfsPath: /agentcis-manifest/helm-test
+    nfsServer: nfs.agentcisinteral.com
+    reclaimPolicy: Retain
+  log:
+    name: nfs-pv-sms-campaign-log
+    capacity: 5Gi
+    nfsPath: /agentcis-pvc/helm-test
+    nfsServer: nfs.agentcisinteral.com
+    reclaimPolicy: Retain
+
+# FRONTEND Configuration
+frontend:
+  enabled: true
+  name: sms-campaign-frontend
+  replicaCount: 1
+  
+  image:
+    repository: xx.dkr.ecr.ap-xx-2.amazonaws.com/sms-campaign-frontend
+    tag: sms-campaign-frontend-12-05-xx
+    pullPolicy: Always
+  
+  service:
+    port: 80
+    portName: nginx-http
+    # type: 
+    
+    type: NodePort
+    nodePort: 30002
+  
+  nginxConfigs:
+  - mountPath: "/etc/nginx/nginx.conf"
+    subPath: nginx.conf
+  - mountPath: "/etc/nginx/conf.d/sms-campaign-frontend-nginx.conf"
+    subPath: sms-campaign-frontend-nginx.conf
+  
+  logs:
+    mountPath: "/var/log/nginx"
+    subPath: sms-campaign-frontend-log
+  
+  resources:
+    requests:
+      memory: "200Mi"
+    limits:
+      memory: "300Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 50
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 15
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+  
+  ingress:
+    enabled: true
+    host: smsfe.microservice.agentcis.com
+    tlsSecretName: sms-campaign-frontend-tls-secret
+    annotations:
+      cert-manager.io/cluster-issuer: lets-encrypt
+      nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+      nginx.ingress.kubernetes.io/rewrite-target: /
+
+# BACKEND Configuration
+backend:
+  enabled: true
+  name: sms-campaign-backend
+  replicaCount: 1
+  
+  image:
+    repository: xxx.dkr.ecr.ap-xx-2.amazonaws.com/sms-campaign-backend
+    tag: sms-campaign-backend-12-05-xxx
+    pullPolicy: IfNotPresent
+  
+  command: ["/bin/bash", "-c"]
+  args:
+    - |
+      echo "-------------------------------"
+      echo "k8s => restarting nginx"
+      service nginx restart 
+      echo "-------------------------------"
+      echo "k8s => starting NODE backend"
+      echo "-------------------------------"
+      pnpm dev | tee -a /prod/packages/sms-campaign/logs/sms-campaign-backend.log
+  
+  service:
+    port: 3004
+    portName: backend-node-port
+    # type: ClusterIP
+  
+    type: NodePort
+    nodePort: 30006
+
+  envFile:
+    mountPath: "/prod/packages/sms-campaign/.env"
+    subPath: backend.env
+  
+  logs:
+    mountPath: "/prod/packages/sms-campaign/logs"
+    subPath: sms-campaign-backend-log
+  
+  resources:
+    requests:
+      memory: "200Mi"
+    limits:
+      memory: "300Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 50
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 15
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+  
+  ingress:
+    enabled: true
+    host: smsapi.microservice.agentcis.com
+    tlsSecretName: sms-campaign-backend-tls-secret
+    annotations:
+      cert-manager.io/cluster-issuer: lets-encrypt
+      nginx.ingress.kubernetes.io/proxy-intercept-errors: "false"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+      nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+
