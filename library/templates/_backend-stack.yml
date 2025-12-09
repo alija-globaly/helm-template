@@ -1,0 +1,99 @@
+{{- define "microservice-library.backend-stack" -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.name }}-deployment
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.backend.name }}
+spec:
+  replicas: {{ .Values.backend.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.name }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+      - name: {{ .Values.backend.name }}
+        image: {{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy | default "IfNotPresent" }}
+        command: {{ toYaml .Values.backend.command | nindent 8 }}
+        args: {{ toYaml .Values.backend.args | nindent 8 }}
+        ports:
+        - containerPort: {{ .Values.backend.service.port }}
+        volumeMounts:
+        - name: {{ .Values.backend.name }}-env-volume
+          mountPath: {{ .Values.backend.envFile.mountPath }}
+          subPath: {{ .Values.backend.envFile.subPath }}
+        - name: {{ .Values.backend.name }}-log-volume
+          mountPath: {{ .Values.backend.logs.mountPath }}
+          subPath: {{ .Values.backend.logs.subPath }}
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 10 }}
+      {{- if .Values.nodeAffinity }}
+      affinity:
+        {{- toYaml .Values.nodeAffinity | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: {{ .Values.backend.name }}-env-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvc.config.name }}
+      - name: {{ .Values.backend.name }}-log-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvc.log.name }}
+
+
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.backend.name }}-svc
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.backend.name }}-service
+spec:
+  selector:
+    app: {{ .Values.backend.name }}
+  type: {{ .Values.backend.service.type }}
+  ports:
+    - name: {{ .Values.backend.service.portName }}
+      port: {{ .Values.backend.service.port }}
+      targetPort: {{ .Values.backend.service.port }}
+      {{- if eq .Values.backend.service.type "NodePort" }}
+      nodePort: {{ .Values.backend.service.nodePort }}
+      {{- end }}
+      
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.backend.name }}-hpa
+  namespace: {{ .Values.namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.backend.name }}-deployment
+  minReplicas: {{ .Values.backend.hpa.minReplicas }}
+  maxReplicas: {{ .Values.backend.hpa.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.backend.hpa.targetCPU }}
+  behavior:
+    {{- toYaml .Values.backend.hpa.behavior | nindent 4 }}
+{{- end -}}

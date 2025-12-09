@@ -1,0 +1,9 @@
+apiVersion: v2
+name: sms-campaign
+description: SMS Campaign microservice
+version: 1.0.0
+dependencies:
+  - name: microservice-library
+    version: 1.0.0
+    repository: "file:///home/ubuntu/helm-test/library"
+

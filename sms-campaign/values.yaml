@@ -1,0 +1,159 @@
+# Global settings
+namespace: agentcis-sms-campaign
+imagePullSecrets:
+  - ecr-registry-secret
+
+# Node affinity
+nodeAffinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+  - weight: 100
+    preference:
+      matchExpressions:
+      - key: kubernetes.io/hostname
+        operator: In
+        values:
+        - other-server
+  - weight: 50
+    preference:
+      matchExpressions:
+      - key: kubernetes.io/hostname
+        operator: In
+        values:
+        - secondary-node1
+
+# PVCs (shared by both)
+pvc:
+  config:
+    name: nfs-sms-campaign-config-pvc
+  log:
+    name: nfs-sms-campaign-log-pvc
+
+# FRONTEND Configuration
+frontend:
+  name: sms-campaign-frontend
+  replicaCount: 1
+  
+  image:
+    repository: xxx.dkr.ecr.ap-xx-2.amazonaws.com/sms-campaign-frontend
+    tag: sms-campaign-frontend-12-05-ac5954c
+    pullPolicy: Always
+  
+  service:
+    port: 80
+    portName: nginx-http
+    # type: ClusterIP
+    
+    type: NodePort
+    nodePort: 30002
+
+  
+  nginxConfigs:
+  - mountPath: "/etc/nginx/nginx.conf"
+    subPath: nginx.conf
+  - mountPath: "/etc/nginx/conf.d/sms-campaign-frontend-nginx.conf"
+    subPath: sms-campaign-frontend-nginx.conf
+  
+  logs:
+    mountPath: "/var/log/nginx"
+    subPath: sms-campaign-frontend-log
+  
+  resources:
+    requests:
+      memory: "200Mi"
+    limits:
+      memory: "300Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 50
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 15
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+  
+
+# BACKEND Configuration
+backend:
+  name: sms-campaign-backend
+  replicaCount: 1
+  
+  image:
+    repository: xxx.dkr.ecr.ap-xxx-2.amazonaws.com/sms-campaign-backend
+    tag: sms-campaign-backend-12-05-ac5954c
+    pullPolicy: IfNotPresent
+  
+  command: ["/bin/bash", "-c"]
+  args:
+    - |
+      echo "-------------------------------"
+      echo "k8s => restarting nginx"
+      service nginx restart 
+      echo "-------------------------------"
+      echo "k8s => starting NODE backend"
+      echo "-------------------------------"
+      pnpm dev | tee -a /prod/packages/sms-campaign/logs/sms-campaign-backend.log
+  
+  service:
+    port: 3004
+    portName: backend-node-port
+    # type: ClusterIP
+    
+    type: NodePort
+    nodePort: 30006
+  
+  envFile:
+    mountPath: "/prod/packages/sms-campaign/.env"
+    subPath: backend.env
+  
+  logs:
+    mountPath: "/prod/packages/sms-campaign/logs"
+    subPath: sms-campaign-backend-log
+  
+  resources:
+    requests:
+      memory: "200Mi"
+    limits:
+      memory: "300Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 50
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 15
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+
+
+# PV Configuration
+pv:
+  config:
+    name: nfs-pv-sms-campaign-config
+    capacity: 5Gi
+    nfsPath: /agentcis-manifest/helm-test
+    nfsServer: nfs.agentcisinteral.com
+  
+  log:
+    name: nfs-pv-sms-campaign-log
+    capacity: 5Gi
+    nfsPath: /agentcis-pvc/helm-test
+    nfsServer: nfs.agentcisinteral.com

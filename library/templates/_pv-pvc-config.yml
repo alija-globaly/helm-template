@@ -1,0 +1,41 @@
+{{- define "microservice-library.pv-pvc-config" -}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.pv.config.name }}
+  {{- if .Values.pv.config.labels }}
+  labels:
+    {{- toYaml .Values.pv.config.labels | nindent 4 }}
+  {{- end }}  
+spec:
+  capacity:
+    storage: {{ .Values.pv.config.capacity | default "5Gi" }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: {{ .Values.pv.config.reclaimPolicy | default "Retain" }}
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+  nfs:
+    path: {{ .Values.pv.config.nfsPath }}
+    server: {{ .Values.pv.config.nfsServer }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.pvc.config.name }}
+  namespace: {{ .Values.namespace }}
+  {{- if .Values.pvc.log.labels }}
+  labels:
+    {{- toYaml .Values.pvc.log.labels | nindent 4 }}
+  {{- end }}  
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.pv.config.capacity | default "5Gi" }}
+  volumeName: {{ .Values.pv.config.name }}
+  storageClassName: ""
+{{- end -}}

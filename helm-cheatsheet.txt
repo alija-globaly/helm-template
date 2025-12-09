@@ -1,0 +1,41 @@
+Helm Command Cheat Sheet
+
+1. Install a Helm chart
+microk8s helm install <release-name> <chart-path> \
+  --namespace <namespace> \
+  --create-namespace
+
+2. Reinstall (replace the existing release)
+microk8s helm install <release-name> <chart-path> \
+  --namespace <namespace> \
+  --replace
+
+3. Uninstall a release
+microk8s helm uninstall <release-name> -n <namespace>
+
+4. List all releases in a namespace
+microk8s helm list -n <namespace>
+
+5. Upgrade an existing release
+microk8s helm upgrade <release-name> <chart-path> \
+  -n <namespace>
+
+6. Upgrade or install (safe option)
+microk8s helm upgrade --install <release-name> <chart-path> \
+  -n <namespace>
+
+7. Update chart dependencies
+microk8s helm dependency update <chart-path>/
+
+Note: Typical Workflow (when library chart changes). After updating anything inside your library chart, run:
+microk8s helm dependency update <chart-path>/
+microk8s helm upgrade <release-name> <chart-path> -n <namespace>
+
+8. Render Helm templates (validate YAML without installing)
+microk8s helm template <release-name> <chart-path> \
+  --namespace <namespace>
+
+9. Render with debug and save output
+microk8s helm template <release-name> <chart-path> \
+  --debug > /tmp/output.yaml
+
