@@ -39,3 +39,16 @@ microk8s helm template <release-name> <chart-path> \
 microk8s helm template <release-name> <chart-path> \
   --debug > /tmp/output.yaml
 
+
+
+cd ~/helm-test/centralized-microservices
+
+# Test
+helm template sms-campaign . -f values-sms-campaign.yaml --namespace agentcis-sms-campaign
+
+# Install
+microk8s helm install sms-campaign . -f values-sms-campaign.yaml --namespace agentcis-sms-campaign --create-namespace
+
+# Verify
+microk8s kubectl get all -n agentcis-sms-campaign
+10. microk8s helm install sms-campaign . -f values-sms-campaign.yml --namespace agentcis-sms-campaign
