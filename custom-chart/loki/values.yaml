@@ -1,0 +1,28 @@
+namespace: monitoring
+
+image:
+  repository: grafana/loki
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3100
+
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClass: "microk8s-hostpath"
+
+resources: {}
+
+loki:
+  configFile: "/etc/loki/loki-config.yaml"
+  configExpandEnv: true
+  retentionPeriod: "90d"
+  maxOldLogCollectPeriod: "30d"
+  logCacheStorePeriod: "360h"
+
+  containerPortA: 3100
+  containerPortB: 9095
+  

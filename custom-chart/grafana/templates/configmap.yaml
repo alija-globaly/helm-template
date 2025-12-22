@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-config
+  namespace: {{ .Values.namespace }}
+data:
+  GF_SECURITY_ADMIN_USER: "{{ .Values.grafana.adminUser }}"
+  GF_SERVER_ROOT_URL: "{{ .Values.grafana.rootURL }}"
+  GF_SMTP_ENABLED: "{{ .Values.grafana.smtpEnabled }}"
+  GF_SMTP_HOST: "{{ .Values.grafana.smtpHost }}"
+  GF_SMTP_USER: "{{ .Values.grafana.smtpUser }}"
+  GF_SMTP_FROM_ADDRESS: "{{ .Values.grafana.smtpFromAddress }}"
+  GF_SMTP_FROM_NAME: "{{ .Values.grafana.smtpFromName }}"
+  GF_AUTH_LOGIN_MAXIMUM_INACTIVE_LIFETIME_DURATION: "{{ .Values.grafana.maxInactiveLifetime }}"
+  GF_AUTH_LOGIN_MAXIMUM_LIFETIME_DURATION: "{{ .Values.grafana.maxLifetime }}"
+  GF_AUTH_SECURITY_SESSION_LIFETIME: "{{ .Values.grafana.securitySessionLifetime }}"
+  GF_DATAPROXY_DIAL_TIMEOUT: "{{ .Values.grafana.datapxyDialTimeout }}"
+  GF_DATAPROXY_TIMEOUT: "{{ .Values.grafana.datapxyTimeout }}"
+  GF_DASHBOARDS_DEFAULT_QUERY_TIMEOUT: "{{ .Values.grafana.defaultQueryTimeout }}"
+
+  GF_FEATURE_TOGGLES_ENABLE: "{{ .Values.grafana.featureToggleEnable }}"
+  GF_FEATURE_TOGGLES_DASHBOARDNEWLAYOUTS: "{{ .Values.grafana.dashboardNewLayouts }}"
+  GF_FEATURE_TOGGLES_KUBERNETESDASHBOARDS: "{{ .Values.grafana.kubernetesDashboards }}"

@@ -1,0 +1,46 @@
+namespace: monitoring
+
+image:
+  repository: grafana/grafana
+  tag: 12.1.0-ubuntu
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClass: "microk8s-hostpath"
+
+smtp:
+  enabled: false
+  host: ""
+  user: ""
+  password: ""
+  fromAddress: ""
+  fromName: ""
+
+resources: {}
+
+
+grafana:
+  adminUser: xxxxx
+  adminPassword: xxxxx
+  rootURL: https://monitoring.globalyhub.com
+  smtpEnabled: true
+  smtpHost: xxxx
+  smtpUser: xxxx
+  smtpPassword: xxxxxxxxxxx
+  smtpFromAddress: monitoring@globalyhub.com
+  smtpFromName: "Globalyhub Grafana Monitoring"
+  maxInactiveLifetime: 4h
+  maxLifetime: 7d
+  securitySessionLifetime: 10m
+  datapxyDialTimeout: 60
+  datapxyTimeout: 120
+  defaultQueryTimeout: 120
+  featureToggleEnable: "dashboardNewLayouts,kubernetesDashboards"
+  dashboardNewLayouts: true
+  kubernetesDashboards: true

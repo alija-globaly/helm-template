@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki-proxy
+  name: {{ .Values.lokiProxy.name }}
+
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.lokiProxy.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.lokiProxy.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.lokiProxy.name }}
+    spec:
+      containers:
+        - name: {{ .Values.lokiProxy.containerName }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: FORWARD_HOST
+              value: {{ .Values.lokiProxy.forwardHost }}
+            - name: FORWARD_PORT
+              value: {{ .Values.lokiProxy.forwardPort }}
+            - name: BASIC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.lokiProxy.secretName }}
+                  key: username
+            - name: BASIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.lokiProxy.secretName }}
+                  key: password
+          ports:
+            - containerPort: {{ .Values.lokiProxy.containerPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.lokiProxy.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: {{ .Values.lokiProxy.serviceType }}
+  ports:
+    - port: {{ .Values.lokiProxy.servicePort }}
+      targetPort: {{ .Values.lokiProxy.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.lokiProxy.name }}

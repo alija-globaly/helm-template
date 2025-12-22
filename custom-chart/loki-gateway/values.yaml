@@ -1,0 +1,20 @@
+namespace: monitoring
+
+image:
+  repository: laurentbel/nginx-basic-auth
+  tag: latest
+  pullPolicy: IfNotPresent
+
+lokiProxy:
+  name: loki-proxy
+  containerName: nginx-proxy-auth
+  replicas: 1
+  forwardHost: "loki.monitoring.svc.cluster.local"
+  forwardPort: 3100
+  secretName: loki-proxy-secret
+  username: xxxx
+  password: xxxx
+
+  containerPort: 80
+  servicePort: 80
+  serviceType: NodePort 

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+        - name: loki
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "-config.file={{ .Values.loki.configFile }}"          
+            - "-config.expand-env={{ .Values.loki.configExpandEnv }}"             
+          ports:
+            - name: http
+              containerPort: {{ .Values.loki.containerPortA }}
+            - name: grpc 
+              containerPort: {{ .Values.loki.containerPortB }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki
+            - name: data
+              mountPath: /loki
+      volumes:
+        - name: config
+          configMap:
+            name: loki-config
+            
+        - name: data
+          persistentVolumeClaim:
+            claimName: loki-data
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: {{ .Values.namespace }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: loki
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.loki.containerPortA }}
+      protocol: TCP
+      name: http      
+
