@@ -14,6 +14,7 @@ persistence:
   size: 5Gi
   storageClass: "microk8s-hostpath"
 
+
 smtp:
   enabled: false
   host: ""
@@ -26,13 +27,13 @@ resources: {}
 
 
 grafana:
-  adminUser: xxxxx
-  adminPassword: xxxxx
-  rootURL: https://monitoring.globalyhub.com
+  adminUser: xxx
+  adminPassword: xxx
+  rootURL: http://monitoring.globalyhub.com
   smtpEnabled: true
-  smtpHost: xxxx
-  smtpUser: xxxx
-  smtpPassword: xxxxxxxxxxx
+  smtpHost: xxx
+  smtpUser: apikey
+  smtpPassword: xxx
   smtpFromAddress: monitoring@globalyhub.com
   smtpFromName: "Globalyhub Grafana Monitoring"
   maxInactiveLifetime: 4h

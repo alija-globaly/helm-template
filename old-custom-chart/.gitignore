@@ -1,0 +1,3 @@
+grafana/values.yml.sample
+loki-gateway/values.yml.sample
+prometheus/values.yml.sample

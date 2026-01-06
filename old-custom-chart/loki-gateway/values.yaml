@@ -12,8 +12,8 @@ lokiProxy:
   forwardHost: "loki.monitoring.svc.cluster.local"
   forwardPort: 3100
   secretName: loki-proxy-secret
-  username: xxxx
-  password: xxxx
+  username: agentcis
+  password: agentcis523
 
   containerPort: 80
   servicePort: 80

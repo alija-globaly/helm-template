@@ -51,4 +51,19 @@ microk8s helm install sms-campaign . -f values-sms-campaign.yaml --namespace age
 
 # Verify
 microk8s kubectl get all -n agentcis-sms-campaign
+
 10. microk8s helm install sms-campaign . -f values-sms-campaign.yml --namespace agentcis-sms-campaign
+
+microk8s helm install myloki grafana/loki -f loki-custom-values.yaml --namespace monitoring
+microk8s helm install mygrafana grafana/grafana -f grafana-custom-values.yaml --namespace monitoring
+
+# Delete old secret
+kubectl delete secret mygrafana -n monitoring
+
+# Delete old configmap
+kubectl delete configmap mygrafana -n monitoring
+
+# Optional: delete PVC if you want a completely fresh DB (careful, you lose dashboards)
+kubectl delete pvc mygrafana -n monitoring
+
+microk8s helm uninstall mygrafana -n monitoring

@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: {{ .Values.namespace }}
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 1000ms
+      scrape_timeout: 1000ms
+
+    scrape_configs:
+      - job_name: 'Grafana-Server-eco-system'
+        scrape_interval: 1000ms
+        file_sd_configs:
+          - files:
+              - '/etc/prometheus/grafana-local-server.yml'
+
+  grafana-local-server.yml: |
+    - targets:
+        - "172.34.26.95:9100"
+      labels:
+        job: "grafana-monitoring-host"
+        hostname: "grafana-monitoring-172-34-26-95"
+        env: "monitoring"
+        type: "Monitoring-Server"
