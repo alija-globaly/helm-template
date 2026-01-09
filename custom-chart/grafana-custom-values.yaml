@@ -31,7 +31,7 @@ service:
     # service.beta.kubernetes.io/aws-load-balancer-internal: "true"
 
 
-# Ingress with TLS
+# Ingress
 ingress:
   enabled: false
   ingressClassName: nginx
@@ -54,16 +54,16 @@ ingress:
 persistence:
   enabled: true
   type: pvc
-  storageClassName: "microk8s-hostpath" 
+  storageClassName: ""  
   accessModes:
     - ReadWriteOnce
-  size: 10Gi 
+  size: 10Gi
   # finalizers:
   #   - kubernetes.io/pvc-protection
 
 
-adminUser: xx
-adminPassword: xx
+adminUser: xxx
+adminPassword: xxx
 
 # Use an existing secret for the admin user.
 # admin:
@@ -108,6 +108,9 @@ containerSecurityContext:
   seccompProfile:
     type: RuntimeDefault
   readOnlyRootFilesystem: false
+
+initChownData:
+  enabled: false
 
 # Grafana configuration
 grafana.ini:

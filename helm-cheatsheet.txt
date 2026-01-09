@@ -66,4 +66,21 @@ kubectl delete configmap mygrafana -n monitoring
 # Optional: delete PVC if you want a completely fresh DB (careful, you lose dashboards)
 kubectl delete pvc mygrafana -n monitoring
 
+microk8s helm uninstall myloki -n monitoring
 microk8s helm uninstall mygrafana -n monitoring
+
+http://myloki-gateway.monitoring.svc.cluster.local:80
+
+
+microk8s helm upgrade --install myloki grafana/loki \
+  -f loki-custom-values.yaml \
+  -n monitoring
+
+
+
+
+
+
+
+http://prometheus-operated.monitoring.svc.cluster.local:9090
+http://myloki-gateway.monitoring.svc.cluster.local:80
