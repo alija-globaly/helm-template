@@ -66,15 +66,8 @@ tempo:
 
 
 
-extraVolumes:
-  - name: tempo-wal
-    emptyDir: {}  # ephemeral WAL
-
-# mount it into container
-extraVolumeMounts:
-  - name: tempo-wal
-    mountPath: /var/tempo/wal
-
+# -- Volumes to add
+extraVolumes: []
 
 affinity: {}
 
@@ -123,5 +116,5 @@ priorityClassName: ""
 # Service account
 serviceAccount:
   create: false
-  name: "awscli"
+  name: "xxx"
   annotations: {}
