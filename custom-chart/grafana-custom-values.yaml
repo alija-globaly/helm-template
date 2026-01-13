@@ -52,7 +52,7 @@ ingress:
 
 # Persistence
 persistence:
-  enabled: true
+  enabled: false
   type: pvc
   storageClassName: ""  
   accessModes:
@@ -62,15 +62,15 @@ persistence:
   #   - kubernetes.io/pvc-protection
 
 
-adminUser: xxx
-adminPassword: xxx
+# adminUser: xxx
+# adminPassword: xxx
 
 # Use an existing secret for the admin user.
-# admin:
+admin:
   # Name of the secret. Can be templated.
-  # existingSecret: ""
-  # userKey: admin
-  # passwordKey: admin
+  existingSecret: "grafana-admin"
+  userKey: admin-user
+  passwordKey: admin-password 
 
 # Resources for Grafana pod
 resources:
@@ -147,10 +147,6 @@ grafana.ini:
 
 
 # envValueFrom:
-#   GF_SECURITY_SECRET_KEY:
-#     secretKeyRef:
-#       name: grafana-secrets
-#       key: secret-key
 #   DB_PASSWORD:
 #     secretKeyRef:
 #       name: grafana-db-secret
