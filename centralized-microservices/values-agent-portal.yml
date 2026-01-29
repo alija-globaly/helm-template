@@ -1,0 +1,201 @@
+# Microservice identifier
+microserviceName: agent-portal
+
+# Namespace
+namespace: agentcis-agent-portal
+
+managedBy: subash-chaudhary
+
+# Image pull secrets
+imagePullSecrets:
+  - ecr-registry-secret
+
+# Node affinity (shared by frontend and backend)
+nodeAffinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      preference:
+        matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - other-server
+    - weight: 50
+      preference:
+        matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - secondary-node1
+
+# PVC names
+pvc:
+  config:
+    name: nfs-agent-portal-config-pvc
+  log:
+    name: nfs-agent-portal-log-pvc
+
+# PV configuration
+pv:
+  config:
+    name: nfs-pv-agent-portal-config
+    capacity: 5Gi
+    nfsPath: /agentcis-manifest/agent-portal/config
+    nfsServer: nfs.agentcisinteral.com
+    reclaimPolicy: Retain
+  log:
+    name: nfs-pv-agent-portal-log
+    capacity: 5Gi
+    nfsPath: /agentcis-pvc/helm-test
+    nfsServer: nfs.agentcisinteral.com
+    reclaimPolicy: Retain
+
+# FRONTEND Configuration
+frontend:
+  enabled: true
+  name: agent-portal-frontend
+  replicaCount: 1
+  
+  image:
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/sub-agent-control-frontend
+    tag: sub-agent-control-frontend-01-16-6f6659f
+    pullPolicy: IfNotPresent
+  
+  service:
+    port: 80
+    portName: nginx-http
+    # type: ClusterIP
+    targetPort: 80
+    type: NodePort
+    nodePort: 30010
+  
+  nginxConfigs:
+  - mountPath: "/etc/nginx/nginx.conf"
+    subPath: nginx.conf
+  - mountPath: "/etc/nginx/conf.d/sub-agent-control-frontend-nginx.conf"
+    subPath: sub-agent-control-frontend-nginx.conf
+  
+  logs:
+    mountPath: "/var/log/nginx"
+    subPath: sub-agent-control-frontend-log
+  
+  resources:
+    requests:
+      #cpu: "100m"
+      memory: "200Mi"
+    limits:
+      #cpu: "250m"
+      memory: "300Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 120
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+  
+  ingress:
+    enabled: false
+    host: smsfe.microservice.agentcis.com
+    tlsSecretName: agent-portal-frontend-tls-secret
+    annotations:
+      cert-manager.io/cluster-issuer: lets-encrypt
+      nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+      nginx.ingress.kubernetes.io/rewrite-target: /
+
+# BACKEND Configuration
+backend:
+  enabled: true
+  name: agent-portal-backend
+  replicaCount: 1
+  
+  image:
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/agent-portal-backend
+    tag: agent-portal-backend-01-16-6f6659f
+    pullPolicy: IfNotPresent
+  
+  command: ["/bin/bash", "-c"]
+  args:
+    - |
+      echo "-------------------------------"
+      echo "k8s => restarting nginx"
+      service nginx restart
+      echo "-------------------------------"
+      echo "k8s => starting NODE backend"
+      echo "-------------------------------"
+      pnpm dev | tee -a /prod/packages/agent-portal-service/logs/agent-portal-backend.log
+  service:
+    port: 3007
+    portName: backend-node-port
+    # type: ClusterIP
+    targetPort: 3007
+    type: NodePort
+    nodePort: 30011
+
+  envFile:
+  - mountPath: "/prod/packages/agent-portal-service/.env"
+    subPath: backend.env
+
+  logs:
+    mountPath: "/prod/packages/agent-portal-service/logs"
+    subPath: agent-portal-backend-log
+  
+  resources:
+    requests:
+      # cpu: "250m"
+      # memory: "400Mi"
+      memory: "50Mi"
+    limits:
+      # cpu: "500m"    
+      # memory: "600Mi"
+      memory: "50Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 70
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 120
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+  
+  ingress:
+    enabled: false
+    host: smsapi.microservice.agentcis.com
+    tlsSecretName: agent-portal-backend-tls-secret
+    annotations:
+      cert-manager.io/cluster-issuer: lets-encrypt
+      nginx.ingress.kubernetes.io/proxy-intercept-errors: "false"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+      nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+
+backendConsumer:
+  enabled: false
+
+auth:
+  enabled: false

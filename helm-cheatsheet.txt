@@ -141,8 +141,8 @@ helm install sms-campaign . -f values-sms-campaign.yml --namespace agentcis-sms-
 helm uninstall sms-campaign -n agentcis-sms-campaign
 
 
-helm install email-summary . -f values-email-summary.yml --namespace agentcis-email-summary
-helm uninstall email-summary -n agentcis-email-summary
+helm install agent-portal . -f values-agent-portal.yml --namespace agentcis-agent-portal
+helm uninstall agent-portal -n agentcis-agent-portal
 
 helm install onboarding . -f values-onboarding.yml --namespace agentcis-onboarding
 helm uninstall onboarding -n agentcis-onboarding
