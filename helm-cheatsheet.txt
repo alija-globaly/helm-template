@@ -130,6 +130,13 @@ microk8s helm install data-import . -f values-data-import.yml --namespace agentc
 microk8s helm uninstall data-import -n agentcis-data-import
 
   
+
+helm install superadmin . -f values-superadmin.yml --namespace agentcis-superadmin
+helm uninstall superadmin -n agentcis-superadmin
+
+
+
+
 helm install sms-campaign . -f values-sms-campaign.yml --namespace agentcis-sms-campaign 
 helm uninstall sms-campaign -n agentcis-sms-campaign
 

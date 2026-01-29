@@ -147,9 +147,9 @@ backend:
     # nodePort: 30007
 
   envFile:
-    mountPath: "/prod/packages/import-backend/.env"
+  - mountPath: "/prod/packages/import-backend/.env"
     subPath: backend.env
-  
+
   logs:
     mountPath: "/prod/packages/import-backend/logs"
     subPath: import-backend-log

@@ -146,7 +146,7 @@ backend:
     nodePort: 30007
 
   envFile:
-    mountPath: "/prod/packages/onboarding-service/.env"
+  - mountPath: "/prod/packages/onboarding-service/.env"
     subPath: backend.env
   
   logs:

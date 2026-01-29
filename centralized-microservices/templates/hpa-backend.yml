@@ -40,12 +40,16 @@ spec:
         ports:
         - containerPort: {{ .Values.backend.service.port }}
         volumeMounts:
-        - name: {{ .Values.backend.name }}-env-volume
-          mountPath: {{ .Values.backend.envFile.mountPath }}
-          subPath: {{ .Values.backend.envFile.subPath }}
+        {{- range .Values.backend.envFile }}
+        - name: {{ $.Values.backend.name }}-env-volume
+          mountPath: {{ .mountPath }}
+          subPath: {{ .subPath }}
+        {{- end }}
+
         - name: {{ .Values.backend.name }}-log-volume
           mountPath: {{ .Values.backend.logs.mountPath }}
           subPath: {{ .Values.backend.logs.subPath }}
+
         {{- if .Values.backend.resources }}
         resources:
           {{- toYaml .Values.backend.resources | nindent 10 }}

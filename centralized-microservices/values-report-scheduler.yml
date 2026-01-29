@@ -144,7 +144,7 @@ backend:
     nodePort: 30007
 
   envFile:
-    mountPath: "/prod/packages/report-scheduler-service/.env"
+  - mountPath: "/prod/packages/report-scheduler-service/.env"
     subPath: backend.env
   
   logs:

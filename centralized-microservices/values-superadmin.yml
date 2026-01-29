@@ -1,8 +1,8 @@
 # Microservice identifier
-microserviceName: email-summary
+microserviceName: superadmin
 
 # Namespace
-namespace: agentcis-email-summary
+namespace: agentcis-superadmin
 
 managedBy: subash-chaudhary
 
@@ -32,20 +32,20 @@ nodeAffinity:
 # PVC names
 pvc:
   config:
-    name: nfs-email-summary-config-pvc
+    name: nfs-superadmin-config-pvc
   log:
-    name: nfs-email-summary-log-pvc
+    name: nfs-superadmin-log-pvc
 
 # PV configuration
 pv:
   config:
-    name: nfs-pv-email-summary-config
+    name: nfs-pv-superadmin-config
     capacity: 5Gi
-    nfsPath: /agentcis-manifest/email-summary/config
+    nfsPath: /agentcis-manifest/superadmin/config
     nfsServer: nfs.agentcisinteral.com
     reclaimPolicy: Retain
   log:
-    name: nfs-pv-email-summary-log
+    name: nfs-pv-superadmin-log
     capacity: 5Gi
     nfsPath: /agentcis-pvc/helm-test
     nfsServer: nfs.agentcisinteral.com
@@ -54,12 +54,12 @@ pv:
 # FRONTEND Configuration
 frontend:
   enabled: true
-  name: email-summary-frontend
+  name: superadmin-frontend
   replicaCount: 1
   
   image:
-    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/email-summary-frontend
-    tag: email-summary-frontend-01-19-596de9b
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/superadmin-frontend
+    tag: superadmin-frontend-01-27-bbbc92d
     pullPolicy: IfNotPresent
   
   service:
@@ -68,31 +68,31 @@ frontend:
     # type: ClusterIP
     targetPort: 80
     type: NodePort
-    nodePort: 30003
+    nodePort: 30008
   
   nginxConfigs:
-  - mountPath: "/etc/nginx/nginx.conf"
-    subPath: nginx.conf
-  - mountPath: "/etc/nginx/conf.d/email-summary-frontend-nginx.conf"
-    subPath: email-summary-frontend-nginx.conf
+  - mountPath: "/etc/nginx/conf.d/superadmin-frontend-nginx.conf"
+    subPath: frontend-nginx.conf
   
   logs:
     mountPath: "/var/log/nginx"
-    subPath: email-summary-frontend-log
+    subPath: superadmin-frontend-log
   
   resources:
     requests:
+      #cpu: "100m"
       memory: "200Mi"
     limits:
+      #cpu: "250m"
       memory: "300Mi"
   
   hpa:
     minReplicas: 1
     maxReplicas: 3
-    targetCPU: 50
+    targetCPU: 80
     behavior:
       scaleUp:
-        stabilizationWindowSeconds: 15
+        stabilizationWindowSeconds: 120
         policies:
         - type: Pods
           value: 2
@@ -107,7 +107,7 @@ frontend:
   ingress:
     enabled: false
     host: smsfe.microservice.agentcis.com
-    tlsSecretName: email-summary-frontend-tls-secret
+    tlsSecretName: superadmin-frontend-tls-secret
     annotations:
       cert-manager.io/cluster-issuer: lets-encrypt
       nginx.ingress.kubernetes.io/proxy-body-size: "100m"
@@ -116,61 +116,69 @@ frontend:
 # BACKEND Configuration
 backend:
   enabled: true
-  name: email-summary-backend
+  name: superadmin-backend
   replicaCount: 1
   
   image:
-    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/email-summary-backend
-    tag: email-summary-backend-01-19-596de9b
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/superadmin-backend
+    tag: superadmin-backend-01-09-0879b87
     pullPolicy: IfNotPresent
   
   command: ["/bin/bash", "-c"]
   args:
     - |
       echo "-------------------------------"
+      echo "k8s => starting php-fpm backend"
+      echo "-------------------------------"
+      php-fpm -D
+      echo "-------------------------------"
       echo "k8s => restarting nginx"
-      service nginx restart 
-      echo "-------------------------------"
-      echo "k8s => starting NODE backend"
-      echo "-------------------------------"
-      tail -f /dev/null
-      #pnpm dev | tee -a /prod/packages/email-summary-service/logs/email-summary-backend.log
-
+      nginx -g "daemon off;"
   service:
-    port: 3005
+    port: 80
     portName: backend-node-port
     # type: ClusterIP
-    targetPort: 3005
+    targetPort: 80
     type: NodePort
-    nodePort: 30005
+    nodePort: 30009
 
   envFile:
-  - mountPath: "/prod/packages/email-summary-service/.env"
+  - mountPath: "/superadmin/backend/.env"
     subPath: backend.env
-  
+  - mountPath: "/etc/nginx/conf.d/backend-nginx.conf"
+    subPath: backend-nginx.conf
+  - mountPath: "/etc/nginx/allow-list.conf"
+    subPath: allow-list.conf
+  - mountPath: "/superadmin/backend/storage/oauth-public.key"
+    subPath: laravel_keys/oauth-public.key
+  - mountPath: "/superadmin/backend/storage/oauth-private.key"
+    subPath: laravel_keys/oauth-private.key 
+
 
   logs:
-    mountPath: "/prod/packages/email-summary-service/logs"
-    subPath: email-summary-backend-log
+    mountPath: "/var/log/nginx"
+    subPath: superadmin-backend-log
   
   resources:
     requests:
-      #cpu: "100m"
-      memory: "200Mi"
+      # cpu: "250m"
+      # memory: "400Mi"
+      memory: "50Mi"
     limits:
-      #cpu: "100m"
-      memory: "300Mi"
+      # cpu: "500m"    
+      # memory: "600Mi"
+      memory: "50Mi"
   
   hpa:
     minReplicas: 1
     maxReplicas: 3
-    targetCPU: 50
+    targetCPU: 70
     behavior:
       scaleUp:
-        stabilizationWindowSeconds: 15
+        stabilizationWindowSeconds: 120
         policies:
         - type: Pods
-          value: 2
+          value: 1
           periodSeconds: 30
       scaleDown:
         stabilizationWindowSeconds: 300
@@ -182,7 +190,7 @@ backend:
   ingress:
     enabled: false
     host: smsapi.microservice.agentcis.com
-    tlsSecretName: email-summary-backend-tls-secret
+    tlsSecretName: superadmin-backend-tls-secret
     annotations:
       cert-manager.io/cluster-issuer: lets-encrypt
       nginx.ingress.kubernetes.io/proxy-intercept-errors: "false"

@@ -148,7 +148,7 @@ backend:
     nodePort: 30006
 
   envFile:
-    mountPath: "/prod/packages/sms-campaign/.env"
+  - mountPath: "/prod/packages/sms-campaign/.env"
     subPath: backend.env
   
   logs:
