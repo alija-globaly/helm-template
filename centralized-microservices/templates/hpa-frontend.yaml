@@ -64,6 +64,7 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app: {{ .Values.frontend.name }}-service
+    managed-by: {{ .Values.managedBy }}
     microservice: {{ .Values.microserviceName }}
 spec:
   selector:

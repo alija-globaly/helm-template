@@ -1,0 +1,124 @@
+{{- if .Values.auth.enabled | default false }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.auth.name }}-deployment
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.auth.name }}
+    microservice: {{ .Values.microserviceName }}
+spec:
+  replicas: {{ .Values.auth.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Values.auth.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.auth.name }}
+        microservice: {{ .Values.microserviceName }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+      - name: {{ .Values.auth.name }}
+        image: {{ .Values.auth.image.repository }}:{{ .Values.auth.image.tag }}
+        imagePullPolicy: {{ .Values.auth.image.pullPolicy | default "IfNotPresent" }}
+        {{- if .Values.auth.command }}
+        command:
+          {{- toYaml .Values.auth.command | nindent 10 }}
+        {{- end }}
+        {{- if .Values.auth.args }}
+        args:
+          {{- toYaml .Values.auth.args | nindent 10 }}
+        {{- end }}
+        ports:
+        - containerPort: {{ .Values.auth.service.portOne }}
+        - containerPort: {{ .Values.auth.service.portTwo }}
+        volumeMounts:
+        - name: {{ .Values.auth.name }}-env-volume
+          mountPath: {{ .Values.auth.envFile.mountPath }}
+          subPath: {{ .Values.auth.envFile.subPath }}
+        - name: {{ .Values.auth.name }}-log-volume
+          mountPath: {{ .Values.auth.logs.mountPath }}
+          subPath: {{ .Values.auth.logs.subPath }}
+        {{- if .Values.auth.resources }}
+        resources:
+          {{- toYaml .Values.auth.resources | nindent 10 }}
+        {{- end }}
+      {{- if .Values.nodeAffinity }}
+      affinity:
+        {{- toYaml .Values.nodeAffinity | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: {{ .Values.auth.name }}-env-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvc.config.name }}
+      - name: {{ .Values.auth.name }}-log-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvc.log.name }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.auth.name }}-svc
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.auth.name }}-service
+    managed-by: {{ .Values.managedBy }}
+    microservice: {{ .Values.microserviceName }}
+spec:
+  selector:
+    app: {{ .Values.auth.name }}
+  type: {{ .Values.auth.service.type }}
+  ports:
+    - name: {{ .Values.auth.service.portNameOne }}
+      port: {{ .Values.auth.service.portOne }}
+      targetPort: {{ .Values.auth.service.targetPortOne }}
+      {{- if eq .Values.auth.service.type "NodePort" }}
+      nodePort: {{ .Values.auth.service.nodePortOne }}
+      {{- end }}
+
+    - name: {{ .Values.auth.service.portNameTwo }}
+      port: {{ .Values.auth.service.portTwo }}
+      targetPort: {{ .Values.auth.service.targetPortTwo }}
+      {{- if eq .Values.auth.service.type "NodePort" }}
+      nodePort: {{ .Values.auth.service.nodePortTwo }}
+      {{- end }}
+
+  ipFamilyPolicy: SingleStack
+  ipFamilies: [IPv4]
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.auth.name }}-hpa
+  namespace: {{ .Values.namespace }}
+  labels:
+    microservice: {{ .Values.microserviceName }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.auth.name }}-deployment
+  minReplicas: {{ .Values.auth.hpa.minReplicas }}
+  maxReplicas: {{ .Values.auth.hpa.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.auth.hpa.targetCPU }}
+  {{- if .Values.auth.hpa.behavior }}
+  behavior:
+    {{- toYaml .Values.auth.hpa.behavior | nindent 4 }}
+  {{- end }}
+{{- end }}

@@ -57,6 +57,8 @@ microk8s kubectl get all -n agentcis-sms-campaign
 microk8s helm install myloki grafana/loki -f loki-custom-values.yaml --namespace monitoring
 microk8s helm install mygrafana grafana/grafana -f grafana-custom-values.yaml --namespace monitoring
 
+helm install mygrafana grafana/grafana -f grafana-custom-values.yaml --namespace monitoring
+
 # Delete old secret
 kubectl delete secret mygrafana -n monitoring
 
@@ -75,6 +77,83 @@ helm install mytempo grafana/tempo -f tempo-custom-values.yaml --namespace monit
 
 microk8s helm uninstall myloki -n monitoring
 microk8s helm uninstall mygrafana -n monitoring
+
+helm uninstall myprometheus -n monitoring
+
+helm uninstall mygrafana -n monitoring
+
+
+
+kubectl get pvc mygrafana -n monitoring -o yaml
+kubectl patch pvc mygrafana -n monitoring -p '{"metadata":{"finalizers":[]}}' --type=merge
+kubectl get pvc -n monitoring
+
+
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install [RELEASE_NAME] prometheus-community/prometheus
+helm install myprometheus prometheus-community/prometheus -f prometheus-custom-values.yaml --namespace monitoring
+
+helm install myprometheus prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  -f prometheus-custom-values.yaml \
+  --dry-run \
+  --debug
+
+
+helm install myprometheus prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  -f prometheus-custom-values.yaml
+
+
+
+helm repo add rawfile-localpv https://openebs.github.io/rawfile-localpv
+helm repo update rawfile-localpv
+helm install rawfile-localpv rawfile-localpv/rawfile-localpv -n openebs --create-namespace
+
+StorageClass : rawfile-localpv
+kubectl get sc
+kubectl get statefulsets -n monitoring 
+
+kubectl delete pod mygrafana-7bdf86d56b-fwh44 \
+  -n monitoring \
+  --grace-period=0 \
+  --force
+
+
+
+
+
+
+microk8s helm install data-import . -f values-data-import.yml --namespace agentcis-data-import
+microk8s helm uninstall data-import -n agentcis-data-import
+
+  
+helm install sms-campaign . -f values-sms-campaign.yml --namespace agentcis-sms-campaign 
+helm uninstall sms-campaign -n agentcis-sms-campaign
+
+
+helm install email-summary . -f values-email-summary.yml --namespace agentcis-email-summary
+helm uninstall email-summary -n agentcis-email-summary
+
+helm install onboarding . -f values-onboarding.yml --namespace agentcis-onboarding
+helm uninstall onboarding -n agentcis-onboarding
+
+
+
+
+microk8s helm upgrade --install data-import . \
+  -f values-data-import.yml \
+  -n agentcis-data-import \
+  --atomic
+
+
+microk8s helm install data-import . \
+  -f values-data-import.yml \
+  -n agentcis-data-import \
+  --atomic
+
 helm uninstall mytempo -n monitoring
 
 helm uninstall myprometheus -n monitoring

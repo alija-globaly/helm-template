@@ -1,8 +1,8 @@
 # Microservice identifier
-microserviceName: sms-campaign
+microserviceName: email-summary
 
 # Namespace
-namespace: agentcis-sms-campaign
+namespace: agentcis-email-summary
 
 managedBy: subash-chaudhary
 
@@ -32,20 +32,20 @@ nodeAffinity:
 # PVC names
 pvc:
   config:
-    name: nfs-sms-campaign-config-pvc
+    name: nfs-email-summary-config-pvc
   log:
-    name: nfs-sms-campaign-log-pvc
+    name: nfs-email-summary-log-pvc
 
 # PV configuration
 pv:
   config:
-    name: nfs-pv-sms-campaign-config
+    name: nfs-pv-email-summary-config
     capacity: 5Gi
-    nfsPath: /agentcis-manifest/sms-campaign/config
+    nfsPath: /agentcis-manifest/email-summary/config
     nfsServer: nfs.agentcisinteral.com
     reclaimPolicy: Retain
   log:
-    name: nfs-pv-sms-campaign-log
+    name: nfs-pv-email-summary-log
     capacity: 5Gi
     nfsPath: /agentcis-pvc/helm-test
     nfsServer: nfs.agentcisinteral.com
@@ -54,39 +54,36 @@ pv:
 # FRONTEND Configuration
 frontend:
   enabled: true
-  name: sms-campaign-frontend
+  name: email-summary-frontend
   replicaCount: 1
   
   image:
-    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/sms-campaign-frontend
-    tag: sms-campaign-frontend-01-19-596de9b
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/email-summary-frontend
+    tag: email-summary-frontend-01-19-596de9b
     pullPolicy: IfNotPresent
   
   service:
     port: 80
     portName: nginx-http
-    targetPort: 80
     # type: ClusterIP
-
+    targetPort: 80
     type: NodePort
-    nodePort: 30002
+    nodePort: 30003
   
   nginxConfigs:
   - mountPath: "/etc/nginx/nginx.conf"
     subPath: nginx.conf
-  - mountPath: "/etc/nginx/conf.d/sms-campaign-frontend-nginx.conf"
-    subPath: sms-campaign-frontend-nginx.conf
+  - mountPath: "/etc/nginx/conf.d/email-summary-frontend-nginx.conf"
+    subPath: email-summary-frontend-nginx.conf
   
   logs:
     mountPath: "/var/log/nginx"
-    subPath: sms-campaign-frontend-log
+    subPath: email-summary-frontend-log
   
   resources:
     requests:
-      #cpu: "100m" 
       memory: "200Mi"
     limits:
-      #cpu: "250m" 
       memory: "300Mi"
   
   hpa:
@@ -110,7 +107,7 @@ frontend:
   ingress:
     enabled: false
     host: smsfe.microservice.agentcis.com
-    tlsSecretName: sms-campaign-frontend-tls-secret
+    tlsSecretName: email-summary-frontend-tls-secret
     annotations:
       cert-manager.io/cluster-issuer: lets-encrypt
       nginx.ingress.kubernetes.io/proxy-body-size: "100m"
@@ -119,13 +116,13 @@ frontend:
 # BACKEND Configuration
 backend:
   enabled: true
-  name: sms-campaign-backend
+  name: email-summary-backend
   replicaCount: 1
   
   image:
-    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/sms-campaign-backend
-    tag: sms-campaign-backend-01-19-596de9b
-    pullPolicy: Always
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/email-summary-backend
+    tag: email-summary-backend-01-19-596de9b
+    pullPolicy: IfNotPresent
   
   command: ["/bin/bash", "-c"]
   args:
@@ -136,29 +133,31 @@ backend:
       echo "-------------------------------"
       echo "k8s => starting NODE backend"
       echo "-------------------------------"
-      pnpm dev | tee -a /prod/packages/sms-campaign/logs/sms-campaign-backend.log
-  
+      tail -f /dev/null
+      #pnpm dev | tee -a /prod/packages/email-summary-service/logs/email-summary-backend.log
+
   service:
-    port: 3004
+    port: 3005
     portName: backend-node-port
-    targetPort: 3004
     # type: ClusterIP
-  
+    targetPort: 3005
     type: NodePort
-    nodePort: 30006
+    nodePort: 30005
 
   envFile:
-    mountPath: "/prod/packages/sms-campaign/.env"
+    mountPath: "/prod/packages/email-summary-service/.env"
     subPath: backend.env
   
   logs:
-    mountPath: "/prod/packages/sms-campaign/logs"
-    subPath: sms-campaign-backend-log
+    mountPath: "/prod/packages/email-summary-service/logs"
+    subPath: email-summary-backend-log
   
   resources:
     requests:
+      #cpu: "100m"
       memory: "200Mi"
     limits:
+      #cpu: "100m"
       memory: "300Mi"
   
   hpa:
@@ -182,7 +181,7 @@ backend:
   ingress:
     enabled: false
     host: smsapi.microservice.agentcis.com
-    tlsSecretName: sms-campaign-backend-tls-secret
+    tlsSecretName: email-summary-backend-tls-secret
     annotations:
       cert-manager.io/cluster-issuer: lets-encrypt
       nginx.ingress.kubernetes.io/proxy-intercept-errors: "false"

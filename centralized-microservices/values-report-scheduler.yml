@@ -1,8 +1,8 @@
 # Microservice identifier
-microserviceName: sms-campaign
+microserviceName: report-scheduler
 
 # Namespace
-namespace: agentcis-sms-campaign
+namespace: agentcis-report-scheduler
 
 managedBy: subash-chaudhary
 
@@ -32,20 +32,20 @@ nodeAffinity:
 # PVC names
 pvc:
   config:
-    name: nfs-sms-campaign-config-pvc
+    name: nfs-report-scheduler-config-pvc
   log:
-    name: nfs-sms-campaign-log-pvc
+    name: nfs-report-scheduler-log-pvc
 
 # PV configuration
 pv:
   config:
-    name: nfs-pv-sms-campaign-config
+    name: nfs-pv-report-scheduler-config
     capacity: 5Gi
-    nfsPath: /agentcis-manifest/sms-campaign/config
+    nfsPath: /agentcis-manifest/report-scheduler/config
     nfsServer: nfs.agentcisinteral.com
     reclaimPolicy: Retain
   log:
-    name: nfs-pv-sms-campaign-log
+    name: nfs-pv-report-scheduler-log
     capacity: 5Gi
     nfsPath: /agentcis-pvc/helm-test
     nfsServer: nfs.agentcisinteral.com
@@ -54,39 +54,36 @@ pv:
 # FRONTEND Configuration
 frontend:
   enabled: true
-  name: sms-campaign-frontend
+  name: report-scheduler-frontend
   replicaCount: 1
   
   image:
-    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/sms-campaign-frontend
-    tag: sms-campaign-frontend-01-19-596de9b
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/report-scheduler-frontend
+    tag: report-scheduler-frontend-01-19-596de9b
     pullPolicy: IfNotPresent
   
   service:
     port: 80
     portName: nginx-http
-    targetPort: 80
     # type: ClusterIP
-
+    targetPort: 80
     type: NodePort
-    nodePort: 30002
+    nodePort: 30004
   
   nginxConfigs:
   - mountPath: "/etc/nginx/nginx.conf"
     subPath: nginx.conf
-  - mountPath: "/etc/nginx/conf.d/sms-campaign-frontend-nginx.conf"
-    subPath: sms-campaign-frontend-nginx.conf
+  - mountPath: "/etc/nginx/conf.d/report-scheduler-frontend-nginx.conf"
+    subPath: report-scheduler-frontend-nginx.conf
   
   logs:
     mountPath: "/var/log/nginx"
-    subPath: sms-campaign-frontend-log
+    subPath: report-scheduler-frontend-log
   
   resources:
     requests:
-      #cpu: "100m" 
       memory: "200Mi"
     limits:
-      #cpu: "250m" 
       memory: "300Mi"
   
   hpa:
@@ -110,7 +107,7 @@ frontend:
   ingress:
     enabled: false
     host: smsfe.microservice.agentcis.com
-    tlsSecretName: sms-campaign-frontend-tls-secret
+    tlsSecretName: report-scheduler-frontend-tls-secret
     annotations:
       cert-manager.io/cluster-issuer: lets-encrypt
       nginx.ingress.kubernetes.io/proxy-body-size: "100m"
@@ -119,13 +116,13 @@ frontend:
 # BACKEND Configuration
 backend:
   enabled: true
-  name: sms-campaign-backend
+  name: report-scheduler-backend
   replicaCount: 1
   
   image:
-    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/sms-campaign-backend
-    tag: sms-campaign-backend-01-19-596de9b
-    pullPolicy: Always
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/report-scheduler-service
+    tag: report-scheduler-service-01-19-596de9b
+    pullPolicy: IfNotPresent
   
   command: ["/bin/bash", "-c"]
   args:
@@ -136,41 +133,42 @@ backend:
       echo "-------------------------------"
       echo "k8s => starting NODE backend"
       echo "-------------------------------"
-      pnpm dev | tee -a /prod/packages/sms-campaign/logs/sms-campaign-backend.log
-  
+      pnpm dev | tee -a /prod/packages/report-scheduler-service/logs/report-scheduler-backend.log 
+
   service:
-    port: 3004
+    port: 3003
     portName: backend-node-port
-    targetPort: 3004
     # type: ClusterIP
-  
+    targetPort: 3003
     type: NodePort
-    nodePort: 30006
+    nodePort: 30007
 
   envFile:
-    mountPath: "/prod/packages/sms-campaign/.env"
+    mountPath: "/prod/packages/report-scheduler-service/.env"
     subPath: backend.env
   
   logs:
-    mountPath: "/prod/packages/sms-campaign/logs"
-    subPath: sms-campaign-backend-log
+    mountPath: "/prod/packages/report-scheduler-service/logs"
+    subPath: report-scheduler-backend-log
   
   resources:
     requests:
-      memory: "200Mi"
+      cpu: "250m"
+      memory: "400Mi"
     limits:
-      memory: "300Mi"
+      cpu: "500m"    
+      memory: "600Mi"
   
   hpa:
     minReplicas: 1
     maxReplicas: 3
-    targetCPU: 50
+    targetCPU: 70
     behavior:
       scaleUp:
-        stabilizationWindowSeconds: 15
+        stabilizationWindowSeconds: 120
         policies:
         - type: Pods
-          value: 2
+          value: 1
           periodSeconds: 30
       scaleDown:
         stabilizationWindowSeconds: 300
@@ -182,7 +180,7 @@ backend:
   ingress:
     enabled: false
     host: smsapi.microservice.agentcis.com
-    tlsSecretName: sms-campaign-backend-tls-secret
+    tlsSecretName: report-scheduler-backend-tls-secret
     annotations:
       cert-manager.io/cluster-issuer: lets-encrypt
       nginx.ingress.kubernetes.io/proxy-intercept-errors: "false"

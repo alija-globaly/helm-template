@@ -1,0 +1,334 @@
+# Microservice identifier
+microserviceName: agentcis-data-import
+
+# Namespace
+namespace: agentcis-data-import
+
+managedBy: subash-chaudhary
+
+# Image pull secrets
+imagePullSecrets:
+  - ecr-registry-secret
+
+# Node affinity (shared by frontend and backend)
+nodeAffinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      preference:
+        matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - other-server
+    - weight: 50
+      preference:
+        matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - secondary-node1
+
+# PVC names
+pvc:
+  config:
+    name: nfs--config-pvc
+  log:
+    name: nfs-data-import-pvc
+
+# PV configuration
+pv:
+  config:
+    name: nfs-pv-data-import-config
+    capacity: 5Gi
+    nfsPath: /agentcis-manifest/data-import/config
+    nfsServer: nfs.agentcisinteral.com
+    reclaimPolicy: Retain
+  log:
+    name: nfs-pv-data-import-log
+    capacity: 5Gi
+    nfsPath: /agentcis-pvc/helm-test
+    nfsServer: nfs.agentcisinteral.com
+    reclaimPolicy: Retain
+
+# FRONTEND Configuration
+frontend:
+  enabled: true
+  name: data-import-frontend
+  replicaCount: 1
+  
+  image:
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/import-frontend
+    tag: import-frontend-01-19-596de9b
+    pullPolicy: IfNotPresent
+  
+  service:
+    port: 80
+    portName: nginx-http
+    # type: ClusterIP
+    targetPort: 80
+    type: NodePort
+    # nodePort: 30003
+  
+  nginxConfigs:
+  - mountPath: "/etc/nginx/nginx.conf"
+    subPath: nginx.conf
+  - mountPath: "/etc/nginx/conf.d/frontend-nginx.conf"
+    subPath: frontend-nginx.conf
+  
+  logs:
+    mountPath: "/var/log/nginx"
+    subPath: import-frontend-log
+  
+  resources:
+    requests:
+      #cpu: "100m" 
+      memory: "200Mi"
+    limits:
+      #cpu: "250m" 
+      memory: "300Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 120
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+  
+  ingress:
+    enabled: false
+    host: smsfe.microservice.agentcis.com
+    tlsSecretName: agentcis-data-import-frontend-tls-secret
+    annotations:
+      cert-manager.io/cluster-issuer: lets-encrypt
+      nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+      nginx.ingress.kubernetes.io/rewrite-target: /
+
+# BACKEND Configuration
+backend:
+  enabled: true
+  name: data-import-backend
+  replicaCount: 1
+  
+  image:
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/import-backend
+    tag: import-backend-01-19-596de9b
+    pullPolicy: IfNotPresent
+  
+  command: ["/bin/bash", "-c"]
+  args:
+    - |
+      echo "-------------------------------"
+      echo "k8s => restarting nginx"
+      service nginx restart 
+      echo "-------------------------------"
+      echo "k8s => starting NODE backend"
+      echo "-------------------------------"
+      pnpm dev | tee -a /prod/packages/import-backend/logs/data-import-backend.log
+  
+  service:
+    port: 3002
+    portName: backend-node-port
+    targetPort: 3002
+    # type: ClusterIP
+  
+    type: NodePort
+    # nodePort: 30007
+
+  envFile:
+    mountPath: "/prod/packages/import-backend/.env"
+    subPath: backend.env
+  
+  logs:
+    mountPath: "/prod/packages/import-backend/logs"
+    subPath: import-backend-log
+  
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "400Mi"
+    limits:
+      cpu: "500m" 
+      memory: "600Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 70
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 120
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+  
+  ingress:
+    enabled: false
+    host: smsapi.microservice.agentcis.com
+    tlsSecretName: agentcis-data-import-backend-tls-secret
+    annotations:
+      cert-manager.io/cluster-issuer: lets-encrypt
+      nginx.ingress.kubernetes.io/proxy-intercept-errors: "false"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+      nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+
+
+
+
+# BACKEND Consumer Configuration
+backendConsumer:
+  enabled: true
+  name: data-import-backend-consumer
+  replicaCount: 1
+  
+  image:
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/backend-consumer
+    tag: import-backend-01-19-596de9b
+    pullPolicy: IfNotPresent
+  
+  command: ["/bin/bash", "-c"]
+  args:
+    - |
+      echo "-------------------------------"
+      echo "k8s => restarting nginx"
+      service nginx restart 
+      echo "-------------------------------"
+      echo "k8s => starting data-import consumer"
+      echo "-------------------------------"
+      pnpm start:import-consumer | tee -a /prod/packages/import-backend/logs/data-import-consumer.log
+  
+  service:
+    port: 3002
+    portName: backend-node-port
+    targetPort: 3002
+    type: ClusterIP
+  
+    # type: NodePort
+    # nodePort: 30007
+
+  envFile:
+    mountPath: "/prod/packages/import-backend/.env"
+    subPath: backend.env
+  
+  logs:
+    mountPath: "/prod/packages/import-backend/logs"
+    subPath: import-backend-consumer
+  
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "400Mi"
+    limits:
+      cpu: "500m" 
+      memory: "600Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 70
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 120
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+
+
+
+
+# Auth Configuration
+auth:
+  enabled: true
+  name: import-auth
+  replicaCount: 1
+  
+  image:
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/data-import-auth
+    tag: import-auth-01-19-596de9b
+    pullPolicy: IfNotPresent
+  
+  command: ["/bin/bash", "-c"]
+  args:
+    - |
+      echo "-------------------------------"
+      echo "k8s => restarting nginx"
+      service nginx restart 
+      echo "-------------------------------"
+      echo "k8s => starting data-import consumer"
+      echo "-------------------------------"
+      pnpm start:import-consumer | tee -a /prod/packages/auth/logs/authentication-server.log
+  
+  service:
+    type: NodePort  
+    portNameOne: auth-service
+    portOne: 3010
+    targetPortOne: 3010
+    nodePortOne: 3010
+    portNameTwo: auth-grpc
+    portTwo: 50051
+    targetPortTwo: 50051
+    nodePortTwo: 50051
+  
+
+  envFile:
+    mountPath: "/prod/packages/auth/.env"
+    subPath: auth.env
+  
+  logs:
+    mountPath: "/prod/packages/auth/logs/"
+    subPath: import-auth
+  
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "400Mi"
+    limits:
+      cpu: "500m" 
+      memory: "600Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 70
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 120
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60

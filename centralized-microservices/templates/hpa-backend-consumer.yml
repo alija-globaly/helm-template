@@ -1,0 +1,115 @@
+{{- if .Values.backendConsumer.enabled | default false }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backendConsumer.name }}-deployment
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.backendConsumer.name }}
+    microservice: {{ .Values.microserviceName }}
+spec:
+  replicas: {{ .Values.backendConsumer.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backendConsumer.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backendConsumer.name }}
+        microservice: {{ .Values.microserviceName }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+      - name: {{ .Values.backendConsumer.name }}
+        image: {{ .Values.backendConsumer.image.repository }}:{{ .Values.backendConsumer.image.tag }}
+        imagePullPolicy: {{ .Values.backendConsumer.image.pullPolicy | default "IfNotPresent" }}
+        {{- if .Values.backendConsumer.command }}
+        command:
+          {{- toYaml .Values.backendConsumer.command | nindent 10 }}
+        {{- end }}
+        {{- if .Values.backendConsumer.args }}
+        args:
+          {{- toYaml .Values.backendConsumer.args | nindent 10 }}
+        {{- end }}
+        ports:
+        - containerPort: {{ .Values.backendConsumer.service.port }}
+        volumeMounts:
+        - name: {{ .Values.backendConsumer.name }}-env-volume
+          mountPath: {{ .Values.backendConsumer.envFile.mountPath }}
+          subPath: {{ .Values.backendConsumer.envFile.subPath }}
+        - name: {{ .Values.backendConsumer.name }}-log-volume
+          mountPath: {{ .Values.backendConsumer.logs.mountPath }}
+          subPath: {{ .Values.backendConsumer.logs.subPath }}
+        {{- if .Values.backendConsumer.resources }}
+        resources:
+          {{- toYaml .Values.backendConsumer.resources | nindent 10 }}
+        {{- end }}
+      {{- if .Values.nodeAffinity }}
+      affinity:
+        {{- toYaml .Values.nodeAffinity | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: {{ .Values.backendConsumer.name }}-env-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvc.config.name }}
+      - name: {{ .Values.backendConsumer.name }}-log-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvc.log.name }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.backendConsumer.name }}-svc
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.backendConsumer.name }}-service
+    managed-by: {{ .Values.managedBy }}
+    microservice: {{ .Values.microserviceName }}
+spec:
+  selector:
+    app: {{ .Values.backendConsumer.name }}
+  type: {{ .Values.backendConsumer.service.type }}
+  ports:
+    - name: {{ .Values.backendConsumer.service.portName }}
+      port: {{ .Values.backendConsumer.service.port }}
+      targetPort: {{ .Values.backendConsumer.service.port }}
+      {{- if eq .Values.backendConsumer.service.type "NodePort" }}
+      nodePort: {{ .Values.backendConsumer.service.nodePort }}
+      {{- end }}
+  ipFamilyPolicy: SingleStack
+  ipFamilies: [IPv4]
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.backendConsumer.name }}-hpa
+  namespace: {{ .Values.namespace }}
+  labels:
+    microservice: {{ .Values.microserviceName }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.backendConsumer.name }}-deployment
+  minReplicas: {{ .Values.backendConsumer.hpa.minReplicas }}
+  maxReplicas: {{ .Values.backendConsumer.hpa.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.backendConsumer.hpa.targetCPU }}
+  {{- if .Values.backendConsumer.hpa.behavior }}
+  behavior:
+    {{- toYaml .Values.backendConsumer.hpa.behavior | nindent 4 }}
+  {{- end }}
+{{- end }}
