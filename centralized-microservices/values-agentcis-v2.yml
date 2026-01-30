@@ -1,0 +1,122 @@
+# Microservice identifier
+microserviceName: agentcis-v2-crm
+
+# Namespace
+namespace: agentcis-v2
+
+managedBy: subash-chaudhary
+
+# Node affinity (shared by frontend and backend)
+nodeAffinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      preference:
+        matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - other-server
+    - weight: 50
+      preference:
+        matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - secondary-node1
+
+# PVC names
+pvc:
+  config:
+    name: nfs-agentcis-v2-config-pvc
+  log:
+    name: nfs-agentcis-v2-log-pvc
+
+# PV configuration
+pv:
+  config:
+    name: nfs-pv-agentcis-v2-config
+    capacity: 5Gi
+    nfsPath: /agentcis-manifest/agentcis-v2/config
+    nfsServer: nfs.agentcisinteral.com
+    reclaimPolicy: Retain
+  log:
+    name: nfs-pv-agentcis-v2-log
+    capacity: 5Gi
+    nfsPath: /agentcis-pvc/helm-test
+    nfsServer: nfs.agentcisinteral.com
+    reclaimPolicy: Retain
+
+# FRONTEND Configuration
+frontend:
+  enabled: true
+  name: agentcis-v2-crm-frontend
+  replicaCount: 1
+  
+  image:
+    repository: 834033184010.dkr.ecr.ap-southeast-2.amazonaws.com/crm-office-checkin
+    tag: crm-12-08-90a2aab
+    pullPolicy: IfNotPresent
+  
+  service:
+    port: 80
+    portName: nginx-http
+    # type: ClusterIP
+    targetPort: 80
+    type: NodePort
+    nodePort: 30013
+  
+  nginxConfigs:
+  - mountPath: "/etc/nginx/nginx.conf"
+    subPath: nginx.conf
+  - mountPath: "/etc/nginx/conf.d/crm--nginx.conf"
+    subPath: crm-nginx.conf
+  
+  logs:
+    mountPath: "/var/log/nginx"
+    subPath: v2-crm
+  
+  resources:
+    requests:
+      #cpu: "100m"
+      memory: "200Mi"
+    limits:
+      #cpu: "250m"
+      memory: "300Mi"
+  
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 120
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+  
+  ingress:
+    enabled: false
+    host: xx.microservice.agentcis.com
+    tlsSecretName: agentcis-v2-crm-frontend-tls-secret
+    annotations:
+      cert-manager.io/cluster-issuer: lets-encrypt
+      nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+      nginx.ingress.kubernetes.io/rewrite-target: /
+
+
+backend:
+  enabled: false
+
+backendConsumer:
+  enabled: false
+
+auth:
+  enabled: false

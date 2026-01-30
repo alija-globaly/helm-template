@@ -135,17 +135,18 @@ helm install superadmin . -f values-superadmin.yml --namespace agentcis-superadm
 helm uninstall superadmin -n agentcis-superadmin
 
 
-
-
 helm install sms-campaign . -f values-sms-campaign.yml --namespace agentcis-sms-campaign 
 helm uninstall sms-campaign -n agentcis-sms-campaign
+
+helm install onboarding . -f values-onboarding.yml --namespace agentcis-onboarding
+helm uninstall onboarding -n agentcis-onboarding
 
 
 helm install agent-portal . -f values-agent-portal.yml --namespace agentcis-agent-portal
 helm uninstall agent-portal -n agentcis-agent-portal
 
-helm install onboarding . -f values-onboarding.yml --namespace agentcis-onboarding
-helm uninstall onboarding -n agentcis-onboarding
+helm install agentcis-v2-crm . -f values-agentcis-v2.yml --namespace agentcis-v2
+helm uninstall onboarding -n agentcis-v2
 
 
 

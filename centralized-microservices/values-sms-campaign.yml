@@ -6,9 +6,6 @@ namespace: agentcis-sms-campaign
 
 managedBy: subash-chaudhary
 
-# Image pull secrets
-imagePullSecrets:
-  - ecr-registry-secret
 
 # Node affinity (shared by frontend and backend)
 nodeAffinity:
@@ -109,7 +106,7 @@ frontend:
   
   ingress:
     enabled: false
-    host: smsfe.microservice.agentcis.com
+    host: xx.microservice.agentcis.com
     tlsSecretName: sms-campaign-frontend-tls-secret
     annotations:
       cert-manager.io/cluster-issuer: lets-encrypt
@@ -181,7 +178,7 @@ backend:
   
   ingress:
     enabled: false
-    host: smsapi.microservice.agentcis.com
+    host: xx.microservice.agentcis.com
     tlsSecretName: sms-campaign-backend-tls-secret
     annotations:
       cert-manager.io/cluster-issuer: lets-encrypt
