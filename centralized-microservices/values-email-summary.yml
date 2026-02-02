@@ -132,6 +132,30 @@ backend:
       tail -f /dev/null
       #pnpm dev | tee -a /prod/packages/email-summary-service/logs/email-summary-backend.log
 
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /health-check
+      port: 3005
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health-check
+      port: 3005
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  startupProbe:
+    httpGet:
+      path: /health-check
+      port: 3005
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 10
+
   service:
     port: 3005
     portName: backend-node-port

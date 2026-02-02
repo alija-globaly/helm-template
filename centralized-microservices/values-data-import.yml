@@ -283,6 +283,30 @@ auth:
       echo "-------------------------------"
       pnpm start:import-consumer | tee -a /prod/packages/auth/logs/authentication-server.log
   
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  startupProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 10
+
   service:
     type: NodePort  
     portNameOne: auth-service

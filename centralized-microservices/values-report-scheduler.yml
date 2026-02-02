@@ -131,6 +131,30 @@ backend:
       echo "-------------------------------"
       pnpm dev | tee -a /prod/packages/report-scheduler-service/logs/report-scheduler-backend.log 
 
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  startupProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 10
+    
   service:
     port: 3003
     portName: backend-node-port

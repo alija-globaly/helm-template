@@ -133,6 +133,31 @@ backend:
       echo "k8s => starting NODE backend"
       echo "-------------------------------"
       pnpm dev | tee -a /prod/packages/agent-portal-service/logs/agent-portal-backend.log
+
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /health-check
+      port: 3007
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health-check
+      port: 3007
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  startupProbe:
+    httpGet:
+      path: /health-check
+      port: 3007
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 10
+
   service:
     port: 3007
     portName: backend-node-port
