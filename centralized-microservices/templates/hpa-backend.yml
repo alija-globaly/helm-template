@@ -40,19 +40,19 @@ spec:
         ports:
         - containerPort: {{ .Values.backend.service.port }}
 
-        {{- if .Values.auth.livenessProbe }}
+        {{- if .Values.backend.livenessProbe }}
         livenessProbe:
-          {{- toYaml .Values.auth.livenessProbe | nindent 10 }}
+          {{- toYaml .Values.backend.livenessProbe | nindent 10 }}
         {{- end }}
         
-        {{- if .Values.auth.readinessProbe }}
+        {{- if .Values.backend.readinessProbe }}
         readinessProbe:
-          {{- toYaml .Values.auth.readinessProbe | nindent 10 }}
+          {{- toYaml .Values.backend.readinessProbe | nindent 10 }}
         {{- end }}
         
-        {{- if .Values.auth.startupProbe }}
+        {{- if .Values.backend.startupProbe }}
         startupProbe:
-          {{- toYaml .Values.auth.startupProbe | nindent 10 }}
+          {{- toYaml .Values.backend.startupProbe | nindent 10 }}
         {{- end }}
                 
         volumeMounts:

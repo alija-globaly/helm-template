@@ -58,6 +58,30 @@ frontend:
     tag: import-frontend-01-19-596de9b
     pullPolicy: IfNotPresent
   
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  startupProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 10
+    
   service:
     port: 80
     portName: nginx-http
@@ -133,6 +157,32 @@ backend:
       echo "-------------------------------"
       pnpm dev | tee -a /prod/packages/import-backend/logs/data-import-backend.log
   
+
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  startupProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 10
+
+
   service:
     port: 3002
     portName: backend-node-port
@@ -215,6 +265,32 @@ backendConsumer:
       echo "-------------------------------"
       pnpm start:import-consumer | tee -a /prod/packages/import-backend/logs/data-import-consumer.log
   
+
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  startupProbe:
+    httpGet:
+      path: /health-check
+      port: 3002
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 10
+
+
   service:
     port: 3002
     portName: backend-node-port
