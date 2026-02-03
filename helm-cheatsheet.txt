@@ -173,3 +173,32 @@ microk8s helm upgrade --install myloki grafana/loki \
 
 http://prometheus-operated.monitoring.svc.cluster.local:9090
 http://myloki-gateway.monitoring.svc.cluster.local:80
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+helm install agentcis-data-import-frontend \
+  ./frontend \
+  -f ./values/data-web-values.yml --namespace agentcis-data-import-test 
+  
+  
+ 
+microk8s helm install agentcis-data-import-frontend \
+  ./frontend \
+  -f ./values/data-web-values.yml --namespace agentcis-data-import-test 
+  
+  
+ 
+microk8s helm template agent-data-import-frontend ./frontend \
+  -f ./values/data-web-values.yml
+  

@@ -28,7 +28,7 @@ nodeAffinity:
 # PVC names
 pvc:
   config:
-    name: nfs--config-pvc
+    name: nfs-config-pvc
   log:
     name: nfs-data-import-pvc
 
