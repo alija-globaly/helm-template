@@ -59,6 +59,30 @@ frontend:
     tag: sub-agent-control-frontend-01-16-6f6659f
     pullPolicy: IfNotPresent
   
+    # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  startupProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 10
+    
   service:
     port: 80
     portName: nginx-http

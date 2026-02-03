@@ -58,6 +58,31 @@ frontend:
     tag: crm-12-08-90a2aab
     pullPolicy: IfNotPresent
   
+    # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /healthcheck
+      port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /healthcheck
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  startupProbe:
+    httpGet:
+      path: /healthcheck
+      port: 80
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 10
+    
+
   service:
     port: 80
     portName: nginx-http
