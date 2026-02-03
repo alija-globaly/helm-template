@@ -47,6 +47,7 @@ pv:
     nfsServer: nfs.agentcisinteral.com
     reclaimPolicy: Retain
 
+
 # FRONTEND Configuration
 frontend:
   enabled: true
@@ -58,6 +59,30 @@ frontend:
     tag: email-summary-frontend-01-19-596de9b
     pullPolicy: IfNotPresent
   
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 30
+  
+  startupProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
+
   service:
     port: 80
     portName: nginx-http
@@ -137,24 +162,24 @@ backend:
     httpGet:
       path: /health-check
       port: 3005
-    initialDelaySeconds: 10
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
       path: /health-check
       port: 3005
-    initialDelaySeconds: 5
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
   
   startupProbe:
     httpGet:
       path: /health-check
       port: 3005
-    initialDelaySeconds: 15
-    periodSeconds: 5
-    failureThreshold: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
 
   service:
     port: 3005

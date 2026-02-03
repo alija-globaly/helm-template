@@ -58,29 +58,29 @@ frontend:
     tag: crm-12-08-90a2aab
     pullPolicy: IfNotPresent
   
-    # probe configurations
+  # probe configurations
   livenessProbe:
     httpGet:
       path: /healthcheck
       port: 80
-    initialDelaySeconds: 10
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
       path: /healthcheck
       port: 80
-    initialDelaySeconds: 5
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
   
   startupProbe:
     httpGet:
       path: /healthcheck
       port: 80
-    initialDelaySeconds: 15
-    periodSeconds: 5
-    failureThreshold: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
     
 
   service:

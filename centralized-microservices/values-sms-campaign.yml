@@ -59,6 +59,30 @@ frontend:
     tag: sms-campaign-frontend-01-19-596de9b
     pullPolicy: IfNotPresent
   
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 30
+  
+  startupProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 10
+
   service:
     port: 80
     portName: nginx-http
@@ -138,23 +162,23 @@ backend:
   # probe configurations
   livenessProbe:
     httpGet:
-      path: /health-check
-      port: 3002
+      path: /sms-campaign/webhook/health
+      port: 3004
     initialDelaySeconds: 10
     periodSeconds: 10
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
-      path: /health-check
-      port: 3002
+      path: /sms-campaign/webhook/health
+      port: 3004
     initialDelaySeconds: 5
     periodSeconds: 10
   
   startupProbe:
     httpGet:
-      path: /health-check
-      port: 3002
+      path: /sms-campaign/webhook/health
+      port: 3004
     initialDelaySeconds: 15
     periodSeconds: 5
     failureThreshold: 10  

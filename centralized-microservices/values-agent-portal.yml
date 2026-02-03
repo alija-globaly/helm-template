@@ -59,30 +59,30 @@ frontend:
     tag: sub-agent-control-frontend-01-16-6f6659f
     pullPolicy: IfNotPresent
   
-    # probe configurations
+  # probe configurations
   livenessProbe:
     httpGet:
       path: /
       port: 80
-    initialDelaySeconds: 10
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
       path: /
       port: 80
-    initialDelaySeconds: 5
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
   
   startupProbe:
     httpGet:
       path: /
       port: 80
-    initialDelaySeconds: 15
-    periodSeconds: 5
-    failureThreshold: 10
-    
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
+
   service:
     port: 80
     portName: nginx-http
@@ -161,26 +161,26 @@ backend:
   # probe configurations
   livenessProbe:
     httpGet:
-      path: /health-check
+      path: /agent-portal/health-check 
       port: 3007
-    initialDelaySeconds: 10
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
-      path: /health-check
+      path: /agent-portal/health-check 
       port: 3007
-    initialDelaySeconds: 5
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
   
   startupProbe:
     httpGet:
-      path: /health-check
+      path: /agent-portal/health-check 
       port: 3007
-    initialDelaySeconds: 15
-    periodSeconds: 5
-    failureThreshold: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
 
   service:
     port: 3007

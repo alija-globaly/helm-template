@@ -58,6 +58,30 @@ frontend:
     tag: report-scheduler-frontend-01-19-596de9b
     pullPolicy: IfNotPresent
   
+  # probe configurations
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 30
+  
+  startupProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 10
+
   service:
     port: 80
     portName: nginx-http
@@ -135,25 +159,25 @@ backend:
   livenessProbe:
     httpGet:
       path: /health-check
-      port: 3002
-    initialDelaySeconds: 10
-    periodSeconds: 10
+      port: 3006
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
       path: /health-check
-      port: 3002
-    initialDelaySeconds: 5
-    periodSeconds: 10
+      port: 3006
+    initialDelaySeconds: 30
+    periodSeconds: 30
   
   startupProbe:
     httpGet:
       path: /health-check
-      port: 3002
-    initialDelaySeconds: 15
-    periodSeconds: 5
-    failureThreshold: 10
+      port: 3006
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
     
   service:
     port: 3003

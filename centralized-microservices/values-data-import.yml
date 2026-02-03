@@ -63,23 +63,23 @@ frontend:
     httpGet:
       path: /
       port: 80
-    initialDelaySeconds: 10
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
       path: /
       port: 80
-    initialDelaySeconds: 5
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
   
   startupProbe:
     httpGet:
       path: /
       port: 80
-    initialDelaySeconds: 15
-    periodSeconds: 5
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 10
     
   service:
@@ -163,24 +163,24 @@ backend:
     httpGet:
       path: /health-check
       port: 3002
-    initialDelaySeconds: 10
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
       path: /health-check
       port: 3002
-    initialDelaySeconds: 5
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
   
   startupProbe:
     httpGet:
       path: /health-check
       port: 3002
-    initialDelaySeconds: 15
-    periodSeconds: 5
-    failureThreshold: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
 
 
   service:
@@ -271,24 +271,24 @@ backendConsumer:
     httpGet:
       path: /health-check
       port: 3002
-    initialDelaySeconds: 10
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
       path: /health-check
       port: 3002
-    initialDelaySeconds: 5
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
   
   startupProbe:
     httpGet:
       path: /health-check
       port: 3002
-    initialDelaySeconds: 15
-    periodSeconds: 5
-    failureThreshold: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
 
 
   service:
@@ -364,24 +364,24 @@ auth:
     httpGet:
       path: /health-check
       port: 3002
-    initialDelaySeconds: 10
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
     failureThreshold: 3
   
   readinessProbe:
     httpGet:
       path: /health-check
       port: 3002
-    initialDelaySeconds: 5
-    periodSeconds: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
   
   startupProbe:
     httpGet:
       path: /health-check
       port: 3002
-    initialDelaySeconds: 15
-    periodSeconds: 5
-    failureThreshold: 10
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 3
 
   service:
     type: NodePort  
