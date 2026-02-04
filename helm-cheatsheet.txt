@@ -187,12 +187,6 @@ http://myloki-gateway.monitoring.svc.cluster.local:80
 
 
 
-helm install agentcis-data-import-frontend \
-  ./frontend \
-  -f ./values/data-web-values.yml --namespace agentcis-data-import-test 
-  
-  
- 
 microk8s helm install agentcis-data-import-frontend \
   ./frontend \
   -f ./values/data-web-values.yml --namespace agentcis-data-import-test 
@@ -200,5 +194,52 @@ microk8s helm install agentcis-data-import-frontend \
   
  
 microk8s helm template agent-data-import-frontend ./frontend \
-  -f ./values/data-web-values.yml
+  -f ./values/data-web-values.yml --namespace agentcis-data-import-test
+  
+  
+ microk8s helm uninstall agentcis-data-import-frontend -n agentcis-data-import --namespace agentcis-data-import-test
+
+
+
+microk8s helm install agentcis-data-import-backend \
+  ./backend \
+  -f ./values/data-api-values.yml --namespace agentcis-data-import-backend-test 
+  
+  
+ 
+microk8s helm template agent-data-import-backend ./backend \
+  -f ./values/data-api-values.yml --namespace agentcis-data-import-backend-test
+  
+  
+  
+  
+  
+  
+microk8s helm install agentcis-data-import-auth \
+  ./auth \
+  -f ./values/auth-values.yml --namespace agentcis-data-import-auth-test 
+  
+  
+ 
+microk8s helm template agent-data-import-auth ./auth \
+  -f ./values/auth-values.yml --namespace agentcis-data-import-auth-test
+  
+    
+microk8s helm uninstall agentcis-data-import-auth --namespace agentcis-data-import-auth-test 
+  
+
+
+
+
+curl http://agentcis-backend-svc:3002/health-check
+  
+curl http://agentcis-auth-svc:3002/health-check  
+  
+  agentcis-auth-svc
+http://3.106.40.172:22210/  
+  
+  
+microk8s kubectl delete pvc nfs-data-import-auth-config-pvc-test \
+  -n agentcis-data-import-auth-test --force --grace-period=0
+  
   
