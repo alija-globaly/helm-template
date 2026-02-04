@@ -94,7 +94,7 @@ frontend:
   nginxConfigs:
   - mountPath: "/etc/nginx/nginx.conf"
     subPath: nginx.conf
-  - mountPath: "/etc/nginx/conf.d/crm--nginx.conf"
+  - mountPath: "/etc/nginx/conf.d/crm-nginx.conf"
     subPath: crm-nginx.conf
   
   logs:
